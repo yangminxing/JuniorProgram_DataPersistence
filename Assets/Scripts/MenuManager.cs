@@ -43,8 +43,6 @@ public class MenuManager : MonoBehaviour
     public void TransferUserName()
     {
         GameManager.instance.userName = userNameText.text;
-
-        Debug.Log(GameManager.instance.userName);
     }
 
     public void StartGame()
