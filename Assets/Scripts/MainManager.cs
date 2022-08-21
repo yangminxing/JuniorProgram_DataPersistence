@@ -1,3 +1,4 @@
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,13 +12,14 @@ public class MainManager : MonoBehaviour
     public Rigidbody Ball;
 
     public Text ScoreText;
+    public Text TopScoreText;
     public GameObject GameOverText;
     
     private bool m_Started = false;
     private int m_Points;
     
     private bool m_GameOver = false;
-
+    private System.Action<string, int> saveTopScoreAction;
     
     // Start is called before the first frame update
     void Start()
@@ -36,6 +38,10 @@ public class MainManager : MonoBehaviour
                 brick.onDestroyed.AddListener(AddPoint);
             }
         }
+
+        saveTopScoreAction += UpdateTopScore;
+
+        DisplayTopScore();
     }
 
     private void Update()
@@ -68,9 +74,33 @@ public class MainManager : MonoBehaviour
         ScoreText.text = $"Score : {m_Points}";
     }
 
+    void DisplayTopScore() {
+        TopScoreText.text = "Best Score: " + GameManager.instance.topScoreUserName + ": " + GameManager.instance.topScore;
+    }
+
+    void UpdateTopScore(string username, int finalscore) {
+        // save to scene
+        GameManager.instance.topScoreUserName = username;
+        GameManager.instance.topScore = finalscore;
+
+        // save to file
+        PlayerData savePlayerData = new PlayerData();
+        savePlayerData.topUserName = username;
+        savePlayerData.topScore = finalscore;
+
+        File.WriteAllText(Application.persistentDataPath + "/savefile.json", JsonUtility.ToJson(savePlayerData));
+
+        DisplayTopScore();
+    }
+
     public void GameOver()
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+
+        // Update the score
+        if (m_Points > GameManager.instance.topScore) {
+            saveTopScoreAction(GameManager.instance.userName, m_Points);
+        }
     }
 }
